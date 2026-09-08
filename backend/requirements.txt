@@ -1,0 +1,7 @@
+﻿fastapi
+uvicorn[standard]
+pydantic-settings
+sqlalchemy
+python-multipart
+opencv-python-headless
+qrcode
