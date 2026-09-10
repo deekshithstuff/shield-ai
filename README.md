@@ -31,9 +31,9 @@ Data flows in a defensive pattern:
 
 ## Technology Stack
 
-- Frontend: React, Vite
-- Backend: FastAPI, Pydantic
-- Python libraries: OpenCV, NumPy, QR decoding dependencies
+- Frontend: React + Vite
+- Backend: FastAPI
+- Python libraries: OpenCV, qrcode, python-multipart, pydantic-settings, SQLAlchemy
 - Local-only security workflow: no automatic website browsing or credential submission
 
 ## Project Structure
@@ -114,10 +114,68 @@ Example values:
 APP_ENV=development
 SECRET_KEY=replace-with-a-secure-secret-key
 DATABASE_URL=sqlite:///./local.db
-CORS_ALLOWED_ORIGINS=http://localhost:5173
+CORS_ALLOWED_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
+VITE_API_BASE_URL=http://127.0.0.1:8000
 ```
 
 Do not commit the real `.env` file.
+
+## Frontend API Configuration
+
+The frontend reads its backend URL from the Vite environment variable `VITE_API_BASE_URL`.
+
+Create a local frontend env file:
+
+```bash
+cd frontend
+copy .env.example .env
+```
+
+Example:
+
+```env
+VITE_API_BASE_URL=http://127.0.0.1:8000
+```
+
+For deployment, set the Vercel environment variable to the public Render backend URL.
+
+## Deployment Readiness
+
+### Frontend: Vercel
+
+- Framework: React + Vite
+- Build command: `npm run build`
+- Output directory: `dist`
+- Start command for preview: `npm run preview -- --host 0.0.0.0 --port 4173`
+- Public URL: Use the Vercel-provided domain or custom domain
+- Backend URL: set `VITE_API_BASE_URL` to the Render backend URL
+
+### Backend: Render
+
+- Framework: FastAPI
+- Runtime: Python
+- Build command: `pip install -r requirements.txt`
+- Start command: `uvicorn app.main:app --host 0.0.0.0 --port 10000`
+- Health check endpoint: `/health`
+- Environment variables:
+  - `APP_ENV=production`
+  - `SECRET_KEY=<secure secret>`
+  - `DATABASE_URL=sqlite:///./local.db` (placeholder for local-only prototype)
+  - `CORS_ALLOWED_ORIGINS=https://your-frontend.vercel.app`
+
+## CORS and Remote Frontend Access
+
+The backend currently only allowed localhost origins. That is safe for local development, but it prevents a deployed frontend from making requests.
+
+To support a production deployment, the backend must allow the deployed frontend origin in `CORS_ALLOWED_ORIGINS`.
+
+Example:
+
+```env
+CORS_ALLOWED_ORIGINS=https://shield-ai.vercel.app
+```
+
+If a Vercel frontend uses more than one domain, list them as comma-separated values.
 
 ## Testing Instructions
 
